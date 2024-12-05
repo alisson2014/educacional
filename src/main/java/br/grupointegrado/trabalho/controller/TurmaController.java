@@ -1,5 +1,6 @@
 package br.grupointegrado.trabalho.controller;
 
+import br.grupointegrado.trabalho.dto.TurmaRequestDTO;
 import br.grupointegrado.trabalho.model.Curso;
 import br.grupointegrado.trabalho.model.Turma;
 import br.grupointegrado.trabalho.repository.CursoRepository;
@@ -20,21 +21,47 @@ public class TurmaController {
     @Autowired
     CursoRepository cursoRepository;
 
+    @GetMapping
+    public ResponseEntity<List<Turma>> findAll(){
+        return ResponseEntity.ok(this.turmaRepository.findAll());
+    }
+
+    @DeleteMapping("/{id}/deletar-turma")
+    public ResponseEntity<Void> delete(@PathVariable Integer id){
+        Turma turma = this.turmaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Turma não encontrado"));
+
+        this.turmaRepository.delete(turma);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{id}/add-turma")
-    public ResponseEntity<Curso> addTurma(@PathVariable Integer id,
-                                          @RequestBody Turma turma){
-        Curso curso = this.cursoRepository.findById(id)
+    public ResponseEntity<Curso> addTurma(@RequestBody TurmaRequestDTO dto){
+        Curso curso = this.cursoRepository.findById(dto.cursoId())
                 .orElseThrow(() -> new IllegalArgumentException("Curso não encontrado"));
 
+        Turma turma = new Turma();
         turma.setCurso(curso);
+        turma.setAno(dto.ano());
+        turma.setSemestre(dto.semestre());
         this.turmaRepository.save(turma);
 
         return ResponseEntity.ok(curso);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Turma>> findAll(){
-        return ResponseEntity.ok(this.turmaRepository.findAll());
+    @PutMapping("/{id}/atualuzar-turma")
+    public ResponseEntity<Turma> update(@PathVariable Integer id,
+                                        @RequestBody TurmaRequestDTO dto) {
+        Turma turma = this.turmaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Turma não encontrado"));
+        Curso curso = this.cursoRepository.findById(dto.cursoId())
+                .orElseThrow(() -> new IllegalArgumentException("Curso não encontrado"));
+
+        turma.setCurso(curso);
+        turma.setAno(dto.ano());
+        turma.setSemestre(dto.semestre());
+
+        return ResponseEntity.ok(this.turmaRepository.save(turma));
     }
 
 }
